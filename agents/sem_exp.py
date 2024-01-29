@@ -296,8 +296,8 @@ class Sem_Exp_Env_Agent(ObjectGoal_Env21):
         if replan:
             self.replan_count += 1
             print("false: ", self.replan_count)
-        else:
-            self.replan_count = 0
+        # else:
+        #    self.replan_count = 0
 
         # Deterministic Local Policy
         if (stop and planner_inputs['found_goal'] == 1) or self.replan_count > 26:
@@ -502,7 +502,12 @@ class Sem_Exp_Env_Agent(ObjectGoal_Env21):
             f_pos = np.argwhere(goal == 1)
             # fmb = get_frontier_boundaries((f_pos[0][0], f_pos[0][1]))
             # goal_fmb = skimage.draw.circle_perimeter(int((fmb[0]+fmb[1])/2), int((fmb[2]+fmb[3])/2), 23)
-            goal_fmb = skimage.draw.circle_perimeter(f_pos[0][0], f_pos[0][1], local_w/4-2)
+            # goal_fmb = skimage.draw.circle_perimeter(f_pos[0][0], f_pos[0][1], local_w/4-2)
+            goal_fmb = skimage.draw.circle_perimeter(
+                int(round(f_pos[0][0])), 
+                int(round(f_pos[0][1])), 
+                int(round(local_w/4-2))
+            )
             goal_fmb[0][goal_fmb[0] > local_w-1] = local_w-1
             goal_fmb[1][goal_fmb[1] > local_w-1] = local_w-1
             goal_fmb[0][goal_fmb[0] < 0] = 0
