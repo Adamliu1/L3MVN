@@ -1,3 +1,75 @@
+# Use Docker
+
+
+1. Clone repository
+```
+git clone https://github.com/Adamliu1/L3MVN.git L3MVN
+```
+
+2. Install utility function to download hm3d dataset
+```
+conda create -n l3mvn
+conda install habitat-sim-challenge-2022 headless -c conda-forge -c aihabitat -n l3mvn
+conda activate l3mvn
+python -m habitat_sim.utils.datasets_download --username <api-token-id> --password <api-token-secret> --uids hm3d --data-path L3MVN/data
+```
+
+3. Download segmentation model from [here](https://drive.google.com/file/d/1U0dS44DIPZ22nTjw0RfO431zV-lMPcvv/view?usp=share_link). Put the downloaded file in L3MVN/RedNet/model.
+
+4. Download test set from [here](https://dl.fbaipublicfiles.com/habitat/data/datasets/objectnav/hm3d/v1/objectnav_hm3d_v1.zip). Unzip and rename the folder to objectgoal_hm3d and place it in L3MVN/data
+
+5. Build Docker image
+```
+docker build -t l3mvn:1.0 .
+```
+## Enable x11 forwarding (Optional)
+If you want to use the visualisation inside docker, you need to forward the ouput
+to host display
+
+To do this, run following command
+```
+xhost +local:docker
+```
+
+
+6. Run the image
+If not using display, run
+```
+docker run --gpus all -v .:/home/app -it l3mvn:1.0
+```
+If using x11 fowarding, run
+```
+docker run --gpus all -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/home/app -it l3mvn:1.0
+```
+7. Create a symbolic link for dataset inside the container
+
+If you start your docker inside ``L3MVN`` folder
+```
+cd cd data/scene_datasets/
+ln -s -f /home/app/data/versioned_data/hm3d-1.0/hm3d hm3d
+```
+else, create a symbolic link that maps folder under ``data/versioned_data/hm3d-1.0/hm3d`` into ``data/scene_datasets``
+
+## Test
+inside the container run the following to test the feed-forward method
+```
+. activate habitat
+python main_llm_vis.py --split val --eval 1 --auto_gpu_config 0 \
+-n 8 --num_eval_episodes 250 --load pretrained_models/llm_model.pt \
+--use_gtsem 0 --num_local_steps 10
+```
+run the following to test the zero-shot method
+```
+. activate habitat
+python main_llm_zeroshot.py --split val --eval 1 --auto_gpu_config 0 \
+-n 5 --num_eval_episodes 400 --num_processes_on_first_gpu 5 \
+--use_gtsem 0 --num_local_steps 10 --exp_name exp_llm_hm3d_zero \
+```
+You can also enable visualisation by adding ``-v 2`` or ``-v 1``. Other usecases refers check code inside ``arguments.py``
+
+---
+``Below is the origional readme``
+
 # L3MVN: Leveraging Large Language Models for Visual Target Navigation
 
 This work is based on our paper. We proposed a new framework to explore and search for the target in unknown environment based on Large Language Model. Our work is based on [SemExp](https://github.com/devendrachaplot/Object-Goal-Navigation) and [llm_scene_understanding](https://github.com/neurips2020submission/invalid-action-masking), implemented in PyTorch.
